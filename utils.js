@@ -1,4 +1,5 @@
 const fs = require('fs')
+const sodium = require('sodium-native')
 
 exports.PORT = 3876
 
@@ -11,5 +12,18 @@ exports.saveLogsToJSON = function(info) {
 }
 
 exports.retrieveLogsToJSON = function() {
-    return fs.readFileSync('bank_logs.json').data
+    if (!fs.existsSync('bank_logs.json')) {
+        return []
+    }
+
+    return JSON.parse(fs.readFileSync('bank_logs.json'))
+}
+
+exports.hashToHex = function(info) {
+    const bo = Buffer.alloc(sodium.crypto_generichash_BYTES)    
+    const bi= Buffer.from(info)
+
+    sodium.crypto_generichash(bo, bi)
+
+    return bo.toString('hex')
 }

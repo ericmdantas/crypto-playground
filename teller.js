@@ -1,8 +1,8 @@
-var jsonStream = require('duplex-json-stream')
-var net = require('net')
-var {PORT} = require('./utils')
+const jsonStream = require('duplex-json-stream')
+const net = require('net')
+const {PORT} = require('./utils')
 
-var client = jsonStream(net.connect(PORT))
+const client = jsonStream(net.connect(PORT))
 
 client.on('data', function (msg) {
   console.log('Teller received:', msg)

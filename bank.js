@@ -1,36 +1,35 @@
-var jsonStream = require('duplex-json-stream')
-var net = require('net')
-var {logERR, PORT, saveLogsToJSON} = require('./utils')
+const jsonStream = require('duplex-json-stream')
+const net = require('net')
+const {logERR, PORT, saveLogsToJSON, retrieveLogsToJSON, hashToHex} = require('./utils')
 
-var logs = []
+const logs = []
+const genesisHash = Buffer.alloc(32).toString('hex')
 
-var server = net.createServer(function (socket) {
+const server = net.createServer(function (socket) {
   socket = jsonStream(socket)
 
-  socket.on('data', function (msg) {
-    console.log('Bank received:', msg)
+  socket.on('data', function (entry) {
+    console.log('Bank received:', entry)
 
-    switch (msg.cmd) {
+    switch (entry.cmd) {
         case "balance":
             socket.write({
                 cmd: 'balance', 
-                balance: rrr(logs),
+                balance: rrr(retrieveLogsToJSON()),
             })            
             break
         case "deposit":
-            logs.push(msg)
-            saveLogsToJSON(logs)
+            appendLog(entry)
             socket.write({
                 cmd: 'deposit', 
-                balance: rrr(logs),
+                balance: rrr(retrieveLogsToJSON()),
             })
             break
         case "withdraw":
-            logs.push(msg)
-            saveLogsToJSON(logs)
+            appendLog(entry)
             socket.write({
                 cmd: 'withdraw', 
-                balance: rrr(logs),
+                balance: rrr(retrieveLogsToJSON()),
             })
             break
         case "default": 
@@ -43,11 +42,21 @@ server.listen(PORT)
 
 function rrr(array) {
     return array.reduce((accumulator, currentValue) => {
-        switch (currentValue.cmd) {
+        switch (currentValue.value.cmd) {
             case "deposit":
-                return accumulator + currentValue.amount
+                return accumulator + currentValue.value.amount
             case "withdraw":
-                return accumulator - currentValue.amount
+                return accumulator - currentValue.value.amount
         }
     }, 0)
+}
+
+function appendLog(entry) {
+    let prevHash = logs.length ? logs[logs.length - 1].hash : genesisHash
+
+    logs.push({
+        value: entry,
+        hash: hashToHex(prevHash + JSON.stringify(entry))
+    })
+    saveLogsToJSON(logs)
 }
