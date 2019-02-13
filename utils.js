@@ -7,11 +7,11 @@ exports.logERR = function(msg) {
     console.error(`ERR -> ${msg}`)
 }
 
-exports.saveLogsToJSON = function(info) {
+exports.saveLogsToFile = function(info) {
     fs.writeFileSync('bank_logs.json', JSON.stringify(info))
 }
 
-exports.retrieveLogsToJSON = function() {
+exports.retrieveLogsFromFile = function() {
     if (!fs.existsSync('bank_logs.json')) {
         return []
     }
